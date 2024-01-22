@@ -26,13 +26,47 @@ for type in types:
         essenceValue = essence[essence.name.str.contains(type)]['chaosValue'].values[0]
         temp.append(essenceValue)
     prices[type] = temp
-print(prices)
 for key in prices:
-    if math.floor(prices[key][1]) > 3 * prices[key][0]:
+    if prices[key][1] > 3 * prices[key][0]:
         upgrade[key] = "YES"
     else: 
         upgrade[key] = "no"
 
+
+
+scarabResponse = requests.get('https://poe.ninja/api/data/itemoverview?league=Affliction&type=Scarab')
+if scarabResponse.status_code == 200:
+    # Process the response content here
+    scarabData = scarabResponse.json()
+else:
+    print(f"Request failed with status code: {scarabResponse.status_code}")
+
+scarabDF = pd.json_normalize(scarabData, 'lines')
+rustedDF = scarabDF.loc[scarabDF.name.str.contains('Rusted')]
+polishedDF = scarabDF.loc[scarabDF.name.str.contains('Polished')]
+gildedDF = scarabDF.loc[scarabDF.name.str.contains('Gilded')]
+scarabTypes = ['Bestiary', 'Reliquary', 'Torment', 'Sulphite', 'Ultimatum', 'Legion', 'Ambush', 'Blight', 'Shaper',
+                'Expedition', 'Cartography', 'Harbinger', 'Elder', 'Divination', 'Breach', 'Abyss']
+scarabPrices = {}
+scarabUpgrades = {}
+scarabs = [rustedDF, polishedDF, gildedDF]
+bestScarab = {}
+upgradeScarab = {}
+for scarabType in scarabTypes:
+    temp = []
+    for scarab in scarabs:
+        scarabValue = scarab[scarab.name.str.contains(scarabType)]['chaosValue'].values[0]
+        temp.append(scarabValue)
+    scarabPrices[scarabType] = temp
+for key in scarabPrices:
+    if scarabPrices[key][0] * 3 < scarabPrices[key][1]:
+        upgradeScarab[key] = ["YES"]
+    else:
+        upgradeScarab[key] = ["no"]
+    if scarabPrices[key][1] * 3 < scarabPrices[key][2]:
+        upgradeScarab[key].append('YES')
+    else:
+        upgradeScarab[key].append('no')
 
 app = Dash(__name__)
 
